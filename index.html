@@ -1952,85 +1952,57 @@
     }
 
 
-    /* v50: fit the visible WebView, including short KakaoTalk landscape windows. */
-    .fullscreen-toggle { display: none; }
-    .fullscreen-note { display: none; position: fixed; z-index: 1500; left: 16px; right: 16px; bottom: 12px; padding: 12px; border-radius: 10px; background: #17253e; border: 1px solid #64748b; font-size: 14px; text-align: center; }
+    /* v51: keep v49's vertical layout; scale the entire battle scene uniformly. */
+    .arena-viewport, .battle-scale { display: contents; }
+    .fullscreen-toggle, .fullscreen-note { display: none; }
+    .fullscreen-note { position: fixed; z-index: 1500; left: 16px; right: 16px; bottom: 12px; padding: 12px; border-radius: 10px; background: #17253e; border: 1px solid #64748b; font-size: 14px; text-align: center; }
     .fullscreen-note.show { display: block; }
     @media (max-width: 1100px), (pointer: coarse) {
-      .game-stage { height: var(--mobile-view-height, 100dvh); }
-      .fullscreen-toggle {
-        display: block; position: absolute; z-index: 120;
-        top: calc(6px + var(--safe-top)); right: calc(8px + var(--safe-right));
-        min-height: 36px; width: 88px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.24);
-        border-radius: 10px; color: #f8fafc; background: #17253e; font: inherit; font-weight: 850; font-size: 13px; cursor: pointer;
-        touch-action: manipulation;
+      .game-stage { height: var(--visible-game-height, 100dvh); }
+      .game {
+        grid-template-rows: 26px 12px var(--battle-height, 80px) 14px minmax(0, 1fr);
+        gap: 3px 7px;
+        padding: calc(4px + var(--safe-top)) calc(8px + var(--safe-right)) calc(4px + var(--safe-bottom)) calc(8px + var(--safe-left));
+        overflow: hidden;
       }
-      .game-stage:not(.mobile-compact) .topbar > .fighter-status.enemy { padding-top: 52px; }
-      .game-stage.awaiting-start .fullscreen-toggle { display: none; }
-      .game-stage:has(.reward-overlay.show, .result-overlay.show) .fullscreen-toggle { display: none; }
-      .quiz { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-      .question { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
-      .choices { flex: 0 0 auto; }
+      .stage-center { gap: 8px; }
+      .round-info { font-size: 14px; }
+      .fullscreen-toggle {
+        display: inline-block; flex: 0 0 auto; min-height: 26px; min-width: 72px;
+        padding: 3px 7px; border: 1px solid #64748b; border-radius: 8px;
+        background: #17253e; color: #f8fafc; font: inherit; font-size: 12px; font-weight: 850; cursor: pointer;
+      }
+      .game-stage.awaiting-start .fullscreen-toggle { visibility: hidden; }
+      .minimap-row { height: 12px; }
+      .minimap-track { height: 12px; padding: 1px; }
+      .minimap-marker { width: 8px; height: 8px; }
+      .message { font-size: 11px; line-height: 1.1; overflow: hidden; }
+      .arena-viewport {
+        display: block; position: relative; grid-column: 2; grid-row: 3;
+        min-width: 0; min-height: 0; height: var(--battle-height, 80px);
+        overflow: hidden; border-radius: 10px;
+      }
+      .battle-scale {
+        display: block; position: absolute; left: 0; top: 0;
+        width: var(--battle-source-width, 900px); height: 172px;
+        transform: scale(var(--battle-scene-scale, .465116)); transform-origin: left top;
+      }
+      .battle-scale .arena-wrap {
+        position: relative; inset: auto; grid-column: auto; grid-row: auto;
+        width: 100%; height: 172px; min-height: 0; border-radius: 0;
+      }
+      .battle-scale .arena-camera,
+      .battle-scale .arena-wrap:has(.enemy-final-boss) .arena-camera { top: 104px; }
+      .quiz { min-height: 0; padding: 6px 8px; overflow: hidden; }
+      .question { display: block; margin: 0 0 6px; line-height: 1.2; }
+      .choices { width: 100%; max-width: none; gap: 6px; }
+      button.choice { min-height: 44px; padding: 4px 5px; font-size: 17px; line-height: 1.2; }
+      .topbar > .fighter-status, .topbar > .fighter-status.enemy { min-height: 0; height: 100%; overflow-y: auto; }
+      /* Extra traits scroll inside fixed sidebars and cannot consume quiz or battle space. */
+      .trait-scroll { overflow: visible; }
+      .game-stage.short-landscape .game { grid-template-rows: 26px 12px var(--battle-height, 56px) 0 minmax(0, 1fr); }
+      .game-stage.short-landscape .message { display: none; }
     }
-    .game-stage.mobile-compact .game {
-      --battle-share: .36;
-      grid-template-columns: minmax(180px, .36fr) minmax(0, .64fr);
-      grid-template-rows: 36px minmax(58px, .4fr) 14px minmax(66px, .6fr) 16px;
-      gap: 4px 8px; overflow: hidden;
-    }
-    .game-stage.mobile-compact .topbar {
-      position: relative; inset: auto; grid-column: 1; grid-row: 2;
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 6px; min-height: 0;
-    }
-    .game-stage.mobile-compact .topbar > .fighter-status,
-    .game-stage.mobile-compact .topbar > .fighter-status.enemy {
-      position: relative; inset: auto; grid-row: 1; width: auto; min-width: 0; padding: 5px;
-      min-height: 0; height: 100%; max-height: 100%; overflow-y: auto;
-    }
-    .game-stage.mobile-compact .topbar > .fighter-status:not(.enemy) { grid-column: 1; padding-bottom: 5px; }
-    .game-stage.mobile-compact .topbar > .fighter-status.enemy { grid-column: 2; }
-    .game-stage.mobile-compact .name { font-size: 10px; line-height: 12px; margin-bottom: 2px; }
-    .game-stage.mobile-compact .heart { font-size: 12px; }
-    .game-stage.mobile-compact .hp-row { min-height: 12px; gap: 1px; }
-    .game-stage.mobile-compact .stat-grid { margin-top: 2px; gap: 3px; flex-direction: row; }
-    .game-stage.mobile-compact .stat-pill { min-height: 24px; font-size: 11px; padding: 3px 4px; }
-    .game-stage.mobile-compact .stat-pill.core { width: calc(50% - 1.5px); min-height: 20px; padding: 2px 3px; font-size: 0; }
-    .game-stage.mobile-compact .stat-pill.core::before { font-size: 12px; line-height: 1; }
-    .game-stage.mobile-compact .stat-pill.core:first-child::before { content: "⚔"; }
-    .game-stage.mobile-compact .stat-pill.core:nth-child(2)::before { content: "➜"; }
-    .game-stage.mobile-compact .stat-pill.core b { font-size: 12px; }
-    .game-stage.mobile-compact .trait-heading { font-size: 11px; margin-top: 5px; padding: 5px 0; }
-    .game-stage.mobile-compact .trait-row { min-height: 28px; font-size: 11px; }
-    .game-stage.mobile-compact .trait-empty { font-size: 11px; }
-    .game-stage.mobile-compact .stage-center {
-      position: absolute; left: 0; right: 0; top: -40px; height: 36px; padding: 0;
-    }
-    .game-stage.mobile-compact .round-info { font-size: 15px; line-height: 1.1; }
-    .game-stage.mobile-compact .minimap-row { grid-column: 1; grid-row: 3; height: 14px; }
-    .game-stage.mobile-compact .minimap-track { height: 14px; }
-    .game-stage.mobile-compact .arena-wrap { grid-column: 1; grid-row: 4; min-height: 0; }
-    .game-stage.mobile-compact .arena-wrap .arena-camera,
-    .game-stage.mobile-compact .arena-wrap:has(.enemy-final-boss) .arena-camera { top: calc(100% - 28px); }
-    .game-stage.mobile-compact .tile { height: 28px; border-radius: 6px; }
-    .game-stage.mobile-compact .fighter.pixel-fighter,
-    .game-stage.mobile-compact .fighter.enemy.pixel-fighter { bottom: 20px; }
-    .game-stage.mobile-compact .pixel-art { width: var(--compact-sprite, 32px); height: var(--compact-sprite, 32px); }
-    .game-stage.mobile-compact .fighter.enemy-boss .pixel-art { width: calc(var(--compact-sprite, 32px) * 1.5); height: calc(var(--compact-sprite, 32px) * 1.5); }
-    .game-stage.mobile-compact .fighter.enemy-final-boss .pixel-art { width: calc(var(--compact-sprite, 32px) * 2); height: calc(var(--compact-sprite, 32px) * 2); }
-    .game-stage.mobile-compact .lava { height: 16px; }
-    .game-stage.mobile-compact .stage-map-intro { font-size: 10px; top: 3px; padding: 3px 5px; }
-    .game-stage.mobile-compact .answer-flash { font-size: 14px; padding: 3px 6px; }
-    .game-stage.mobile-compact .message { grid-column: 1; grid-row: 5; font-size: 11px; overflow: hidden; }
-    .game-stage.mobile-compact .quiz { grid-column: 2; grid-row: 2 / 6; padding: 8px; }
-    .game-stage.mobile-compact .question { font-size: 22px; line-height: 1.25; margin: 0 0 8px; }
-    .game-stage.mobile-compact .choices { gap: 6px; }
-    .game-stage.mobile-compact button.choice { min-height: 44px; padding: 5px 6px; font-size: 18px; line-height: 1.2; }
-    .game-stage.mobile-compact .bgm-toggle {
-      top: calc(6px + var(--safe-top)); bottom: auto; left: auto;
-      right: calc(104px + var(--safe-right)); height: 36px; width: 86px; font-size: 12px; border-radius: 10px;
-    }
-    .game-stage.mobile-short .choices { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .game-stage.mobile-short button.choice { font-size: 16px; padding: 5px 4px; }
 
 </style>
 </head>
@@ -2042,7 +2014,6 @@
   </div>
   <div class="game-stage awaiting-start" id="gameStage">
   <button class="bgm-toggle" id="bgmToggleButton" type="button" aria-pressed="true">♫ BGM ON</button>
-  <button class="fullscreen-toggle" id="fullscreenToggleButton" type="button" aria-pressed="false">전체화면</button>
   <div class="fullscreen-note" id="fullscreenNote" role="status" aria-live="polite"></div>
   <main class="game">
     <section class="topbar">
@@ -2056,6 +2027,7 @@
 
       <div class="stage-center">
         <div class="round-info" id="stageInfo">STAGE 1 / 20</div>
+        <button class="fullscreen-toggle" id="fullscreenToggleButton" type="button" aria-pressed="false">전체화면</button>
       </div>
 
       <div class="fighter-status enemy">
@@ -2073,6 +2045,7 @@
       </div>
     </section>
 
+    <div class="arena-viewport" id="battleViewport"><div class="battle-scale">
     <section class="arena-wrap theme-lava" id="arenaWrap">
       <div class="stage-map-intro" id="stageMapIntro"></div>
       <div class="arena-camera" id="arenaCamera">
@@ -2083,6 +2056,7 @@
       </div>
       <div class="lava"></div>
     </section>
+    </div></div>
 
     <div class="message" id="message">문제를 맞히면 적을 오른쪽으로 밀어냅니다.</div>
 
@@ -4555,138 +4529,145 @@
     }
 
 
-    // Rendering-only helpers. Battle, question selection and rewards remain unchanged.
-    let mobileQuizFitFrame = 0;
-    let fullscreenNoteTimer = 0;
-    const mobileLayoutQuery = window.matchMedia("(max-width: 1100px), (pointer: coarse)");
+    // Rendering only: reserve the quiz's natural height, then uniformly scale the battle.
+    const verticalMobileQuery = matchMedia("(max-width: 1100px), (pointer: coarse)");
+    const battleViewportEl = document.getElementById("battleViewport");
     const fullscreenToggleButton = document.getElementById("fullscreenToggleButton");
     const fullscreenNote = document.getElementById("fullscreenNote");
+    let verticalFitFrame = 0;
+    let fullscreenNoteTimer = 0;
 
-    function fitMobileQuiz() {
-      mobileQuizFitFrame = 0;
+    function scheduleVerticalMobileFit() {
+      if (!verticalFitFrame) verticalFitFrame = requestAnimationFrame(fitVerticalMobileUI);
+    }
+
+    function fitVerticalMobileUI() {
+      verticalFitFrame = 0;
       const canvas = document.getElementById("gameStage");
+      const game = document.querySelector(".game");
       const quiz = document.querySelector(".quiz");
       const question = document.getElementById("question");
       const choices = document.getElementById("choices");
       const buttons = [...choices.querySelectorAll(".choice")];
-      if (!mobileLayoutQuery.matches) {
+      if (!verticalMobileQuery.matches) {
         question.style.removeProperty("font-size");
+        choices.style.removeProperty("grid-template-columns");
         buttons.forEach(button => button.style.removeProperty("font-size"));
-        return;
-      }
-      const compact = canvas.classList.contains("mobile-compact");
-      const short = canvas.classList.contains("mobile-short");
-      // The question owns all space left above the fixed touch targets. No quiz scrolling.
-      let qSize = compact ? 22 : Math.min(26, Math.max(20, innerWidth * .03));
-      let cSize = short ? 16 : compact ? 18 : Math.min(21, Math.max(17, innerWidth * .025));
-      question.style.fontSize = qSize + "px";
-      buttons.forEach(button => button.style.fontSize = cSize + "px");
-      function textFits() {
-        const range = document.createRange();
-        range.selectNodeContents(question);
-        const textRect = range.getBoundingClientRect();
-        const questionRect = question.getBoundingClientRect();
-        return textRect.height <= question.clientHeight + 1 && textRect.width <= question.clientWidth + 1
-          && textRect.top >= questionRect.top - 1 && textRect.bottom <= questionRect.bottom + 1
-          && quiz.scrollHeight <= quiz.clientHeight + 1;
-      }
-      // Size only the displayed text; don't remove, truncate or rewrite any question.
-      while (!textFits() && qSize > 14) {
-        qSize -= .5;
-        question.style.fontSize = qSize + "px";
-      }
-      while (!textFits() && cSize > 12) {
-        cSize -= .5;
-        buttons.forEach(button => button.style.fontSize = cSize + "px");
-      }
-      // A final small adjustment covers unusually long questions in very short WebViews.
-      while (!textFits() && qSize > 12) {
-        qSize -= .5;
-        question.style.fontSize = qSize + "px";
-      }
-      if (compact) {
-        const arena = document.getElementById("arenaWrap");
-        canvas.style.setProperty("--compact-sprite", Math.max(24, Math.min(56, (arena.clientHeight - 18) / 2)) + "px");
-      }
-    }
-
-    function scheduleMobileQuizFit() {
-      if (!mobileQuizFitFrame) mobileQuizFitFrame = requestAnimationFrame(fitMobileQuiz);
-    }
-
-    function syncMobileViewport() {
-      const canvas = document.getElementById("gameStage");
-      if (!mobileLayoutQuery.matches) {
-        canvas.classList.remove("mobile-compact", "mobile-short");
-        canvas.style.removeProperty("--mobile-view-height");
-        scheduleMobileQuizFit();
         return;
       }
       const vv = window.visualViewport;
       const height = Math.floor(Math.min(innerHeight, vv && Math.abs(vv.scale - 1) < .05 ? vv.height : innerHeight));
-      const landscape = innerWidth > height;
-      canvas.style.setProperty("--mobile-view-height", height + "px");
-      canvas.classList.toggle("mobile-compact", landscape && height <= 500);
-      canvas.classList.toggle("mobile-short", landscape && height < 270);
-      scheduleMobileQuizFit();
+      canvas.style.setProperty("--visible-game-height", height + "px");
+      const short = height < 280 && innerWidth > height;
+      canvas.classList.toggle("short-landscape", short);
+      const gs = getComputedStyle(game);
+      const qs = getComputedStyle(quiz);
+      const padding = parseFloat(gs.paddingTop) + parseFloat(gs.paddingBottom);
+      const fixedRows = 26 + 12 + (short ? 0 : 14);
+      const available = game.clientHeight - padding - parseFloat(gs.rowGap) * 4 - fixedRows;
+      let questionSize = short ? 20 : Math.min(26, Math.max(20, innerWidth * .03));
+      let choiceSize = 17;
+      question.style.fontSize = questionSize + "px";
+      buttons.forEach(button => button.style.fontSize = choiceSize + "px");
+      choices.style.gridTemplateColumns = short ? "repeat(4,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))";
+      if (short && buttons.length === 4) {
+        const fourHeight = choices.getBoundingClientRect().height;
+        choices.style.gridTemplateColumns = "repeat(2,minmax(0,1fr))";
+        if (choices.getBoundingClientRect().height >= fourHeight) choices.style.gridTemplateColumns = "repeat(4,minmax(0,1fr))";
+      }
+      const quizPadding = parseFloat(qs.paddingTop) + parseFloat(qs.paddingBottom);
+      function quizNeeded() {
+        return question.getBoundingClientRect().height + parseFloat(getComputedStyle(question).marginBottom)
+          + choices.getBoundingClientRect().height + quizPadding + 2;
+      }
+      while (quizNeeded() + 24 > available && questionSize > 16) {
+        questionSize -= .5;
+        question.style.fontSize = questionSize + "px";
+      }
+      while (quizNeeded() + 24 > available && choiceSize > 15) {
+        choiceSize -= .5;
+        buttons.forEach(button => button.style.fontSize = choiceSize + "px");
+      }
+      while (quizNeeded() + 20 > available && questionSize > 14) {
+        questionSize -= .5;
+        question.style.fontSize = questionSize + "px";
+      }
+      const cap = Math.max(36, Math.min(106, height * .28));
+      const battleHeight = Math.max(16, Math.min(cap, available - quizNeeded()));
+      const sceneScale = battleHeight / 172;
+      const oldWidth = arenaWrapEl.clientWidth;
+      const oldHeight = parseFloat(canvas.style.getPropertyValue("--battle-height")) || 0;
+      canvas.style.setProperty("--battle-height", battleHeight + "px");
+      canvas.style.setProperty("--battle-scene-scale", String(sceneScale));
+      canvas.style.setProperty("--battle-source-width", battleViewportEl.clientWidth / sceneScale + "px");
+      // Existing camera maths stays in original scene coordinates; only its viewport width changes.
+      if (Math.abs(oldWidth - arenaWrapEl.clientWidth) > 1 || Math.abs(oldHeight - battleHeight) > .5) {
+        if (state.cameraMode === "overview") setOverviewCamera(false);
+        else followBattleCamera(false);
+      }
     }
 
-    function isGameFullscreen() {
-      return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    function syncVisibleGameHeight() {
+      const canvas = document.getElementById("gameStage");
+      if (!verticalMobileQuery.matches) {
+        canvas.classList.remove("short-landscape");
+        canvas.style.removeProperty("--visible-game-height");
+      } else {
+        const vv = window.visualViewport;
+        const height = Math.floor(Math.min(innerHeight, vv && Math.abs(vv.scale - 1) < .05 ? vv.height : innerHeight));
+        canvas.style.setProperty("--visible-game-height", height + "px");
+      }
+      scheduleVerticalMobileFit();
     }
 
-    function showFullscreenNote() {
-      fullscreenNote.textContent = "이 브라우저는 전체화면을 지원하지 않습니다. 카카오톡 메뉴에서 외부 브라우저(Chrome/Safari)로 열어주세요.";
-      fullscreenNote.classList.add("show");
-      clearTimeout(fullscreenNoteTimer);
-      fullscreenNoteTimer = setTimeout(() => fullscreenNote.classList.remove("show"), 4500);
-    }
-
-    async function requestGameFullscreen(showFailure = false) {
-      if (!mobileLayoutQuery.matches || isGameFullscreen()) return;
-      const root = document.documentElement;
+    function gameIsFullscreen() { return Boolean(document.fullscreenElement || document.webkitFullscreenElement); }
+    async function enterGameFullscreen(showFailure = false) {
+      if (!verticalMobileQuery.matches || gameIsFullscreen()) return;
       try {
+        const root = document.documentElement;
         if (root.requestFullscreen) await root.requestFullscreen({ navigationUI: "hide" });
         else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
-        else { if (showFailure) showFullscreenNote(); return; }
-      } catch (_) { if (showFailure) showFullscreenNote(); }
-      syncMobileViewport();
+        else throw new Error("Fullscreen unavailable");
+      } catch (_) {
+        if (showFailure) {
+          fullscreenNote.textContent = "카카오톡이 전체화면을 허용하지 않으면 메뉴에서 외부 브라우저(Chrome/Safari)로 열어주세요.";
+          fullscreenNote.classList.add("show");
+          clearTimeout(fullscreenNoteTimer);
+          fullscreenNoteTimer = setTimeout(() => fullscreenNote.classList.remove("show"), 4500);
+        }
+      }
+      syncVisibleGameHeight();
     }
-
     fullscreenToggleButton.addEventListener("click", async () => {
-      if (isGameFullscreen()) {
+      if (gameIsFullscreen()) {
         try {
           if (document.exitFullscreen) await document.exitFullscreen();
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         } catch (_) {}
-      } else await requestGameFullscreen(true);
+      } else await enterGameFullscreen(true);
     });
-    function updateFullscreenLayout() {
-      fullscreenToggleButton.textContent = isGameFullscreen() ? "화면 복귀" : "전체화면";
-      fullscreenToggleButton.setAttribute("aria-pressed", String(isGameFullscreen()));
+    function updateVerticalFullscreen() {
+      fullscreenToggleButton.textContent = gameIsFullscreen() ? "화면 복귀" : "전체화면";
+      fullscreenToggleButton.setAttribute("aria-pressed", String(gameIsFullscreen()));
       fullscreenNote.classList.remove("show");
       fitGameCanvas();
-      requestAnimationFrame(() => {
-        renderPositions();
-        if (state.cameraMode === "overview") setOverviewCamera(false);
-        else followBattleCamera(false);
-        scheduleMobileQuizFit();
-      });
     }
-    document.addEventListener("fullscreenchange", updateFullscreenLayout);
-    document.addEventListener("webkitfullscreenchange", updateFullscreenLayout);
-    window.visualViewport?.addEventListener("resize", updateFullscreenLayout);
-    mobileLayoutQuery.addEventListener("change", updateFullscreenLayout);
-    new MutationObserver(scheduleMobileQuizFit).observe(document.querySelector(".quiz"), { childList: true, subtree: true, characterData: true });
-    if (window.ResizeObserver) new ResizeObserver(scheduleMobileQuizFit).observe(document.querySelector(".quiz"));
-    document.fonts?.addEventListener("loadingdone", scheduleMobileQuizFit);
-    startGate.addEventListener("click", () => { void requestGameFullscreen(false); });
-    startGate.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") void requestGameFullscreen(false); });
+    document.addEventListener("fullscreenchange", updateVerticalFullscreen);
+    document.addEventListener("webkitfullscreenchange", updateVerticalFullscreen);
+    window.visualViewport?.addEventListener("resize", updateVerticalFullscreen);
+    verticalMobileQuery.addEventListener("change", updateVerticalFullscreen);
+    new MutationObserver(scheduleVerticalMobileFit).observe(document.querySelector(".quiz"), {
+      childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"]
+    });
+    if (window.ResizeObserver) new ResizeObserver(scheduleVerticalMobileFit).observe(document.querySelector(".game"));
+    document.fonts?.addEventListener("loadingdone", scheduleVerticalMobileFit);
+    startGate.addEventListener("click", () => { void enterGameFullscreen(false); });
+    startGate.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") void enterGameFullscreen(false); });
 
     function fitGameCanvas() {
       const canvas = document.getElementById("gameStage");
       if (!canvas) return;
-      syncMobileViewport();
+      syncVisibleGameHeight();
       // Only layout changes on small/touch screens; gameplay keeps the original rules.
       if (window.matchMedia("(max-width: 1100px), (pointer: coarse)").matches) {
         canvas.style.transform = "none";
