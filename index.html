@@ -1952,6 +1952,51 @@
     }
 
 
+
+    /* v52: one scalable FX system for damage, push, crit, and combined attacks. */
+    .fx-ring,.fx-shard,.fx-slash { position:absolute; pointer-events:none; z-index:14; }
+    .fx-ring { width:var(--fx-size); height:var(--fx-size); border:var(--fx-border,4px) solid var(--fx-color);
+      border-radius:50%; box-shadow:0 0 13px var(--fx-color),inset 0 0 14px var(--fx-color);
+      animation:fxRing .62s ease-out forwards; animation-delay:var(--fx-delay,0ms); opacity:0; }
+    @keyframes fxRing { 0% {transform:translate(-50%,-50%) scale(.22);opacity:0}
+      16% {opacity:.95} 100% {transform:translate(-50%,-50%) scale(1.9);opacity:0} }
+    .fx-shard { width:var(--fx-width,7px);height:var(--fx-height,12px);border-radius:2px;
+      background:var(--fx-color);box-shadow:0 0 10px var(--fx-color);
+      animation:fxShard .69s cubic-bezier(.15,.65,.2,1) forwards; }
+    @keyframes fxShard { 0% {transform:translate(-50%,-50%) rotate(var(--fx-angle)) scale(.4);opacity:1}
+      100% {transform:translate(calc(-50% + var(--fx-dx)),calc(-50% + var(--fx-dy))) rotate(calc(var(--fx-angle) + 135deg)) scale(.15);opacity:0} }
+    .fx-slash { height:var(--fx-thickness,6px);width:var(--fx-length);border-radius:99px;
+      background:linear-gradient(90deg,transparent,var(--fx-color),#fff,transparent);
+      box-shadow:0 0 20px var(--fx-color); transform-origin:center;
+      animation:fxSlash .35s ease-out forwards; }
+    @keyframes fxSlash {0% {transform:translate(-50%,-50%) rotate(-33deg) scaleX(.2);opacity:0}
+      33% {opacity:1}100% {transform:translate(-50%,-50%) rotate(-33deg) scaleX(1.5);opacity:0}}
+    .push-wave.fx-combined {border-color:#e9a8ff;box-shadow:0 0 22px #a855f7,inset 0 0 18px #22d3ee;}
+    .push-wave.fx-combined::after {color:#fef08a;text-shadow:0 0 16px #facc15;}
+    @media (prefers-reduced-motion:reduce) {
+      .fx-shard,.fx-slash,.fx-ring {animation-duration:.15s;}
+    }
+
+
+    /* v54: stat-triggered electric slash and rightward fire dragon; no asset files. */
+    .fx-electric-slash,.fx-fire-dragon {position:absolute;z-index:18;pointer-events:none;will-change:transform,opacity;}
+    .fx-electric-slash {filter:drop-shadow(0 0 7px #22d3ee) drop-shadow(0 0 15px #6366f1);
+      animation:fxElectricFlash .42s ease-out both;}
+    .fx-electric-slash svg,.fx-fire-dragon svg {display:block;width:100%;height:100%;overflow:visible;}
+    @keyframes fxElectricFlash {0%{opacity:0;transform:translate(-50%,-50%) rotate(-13deg) scale(.35)}
+      16%{opacity:1}36%{transform:translate(-50%,-50%) rotate(5deg) scale(1.18)}
+      57%{opacity:.38}73%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(10deg) scale(1.4)}}
+    .fx-fire-dragon {filter:drop-shadow(0 0 11px #fb923c) drop-shadow(0 0 19px #ef4444);
+      animation:fxDragonFly .52s cubic-bezier(.17,.75,.23,1) both;}
+    .fx-fire-dragon.trace .fx-dragon-head {display:none;}
+    .fx-fire-dragon.titan {filter:drop-shadow(0 0 16px #facc15) drop-shadow(0 0 26px #ea580c);}
+    .fx-fire-dragon.hybrid {filter:drop-shadow(0 0 12px #a78bfa) drop-shadow(0 0 23px #f97316);}
+    @keyframes fxDragonFly {0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}
+      14%{opacity:1}72%{opacity:1}
+      90%{opacity:1;transform:translate(calc(-50% + var(--fx-fly-x)),calc(-50% + var(--fx-fly-y))) scale(1.06)}
+      100%{opacity:0;transform:translate(calc(-50% + var(--fx-fly-x) + 20px),calc(-50% + var(--fx-fly-y))) scale(1.16)}}
+    @media(prefers-reduced-motion:reduce){.fx-electric-slash,.fx-fire-dragon{animation-duration:.18s;}}
+
     /* v51: keep v49's vertical layout; scale the entire battle scene uniformly. */
     .arena-viewport, .battle-scale { display: contents; }
     .fullscreen-toggle, .fullscreen-note { display: none; }
@@ -2002,6 +2047,16 @@
       .trait-scroll { overflow: visible; }
       .game-stage.short-landscape .game { grid-template-rows: 26px 12px var(--battle-height, 56px) 0 minmax(0, 1fr); }
       .game-stage.short-landscape .message { display: none; }
+    }
+
+    /* v53: texts escape only the battle viewport; backgrounds and particles stay clipped. */
+    .floating-text-layer { position:absolute; inset:0; z-index:19; overflow:visible; pointer-events:none; }
+    .floating-text-layer .floating-number { white-space:nowrap; animation-name:unclippedDamageFloat; }
+    @keyframes unclippedDamageFloat {
+      0%   { transform:translate(-50%,calc(8px * var(--float-scale,1))) scale(.65); opacity:0; }
+      20%  { transform:translate(-50%,calc(-4px * var(--float-scale,1))) scale(1.18); opacity:1; }
+      72%  { opacity:1; }
+      100% { transform:translate(-50%,calc(-55px * var(--float-scale,1))) scale(.96); opacity:0; }
     }
 
 </style>
@@ -2066,6 +2121,8 @@
     </section>
 
   </main>
+
+  <div class="floating-text-layer" id="floatingTextLayer" aria-hidden="true"></div>
 
   <div class="start-overlay show" id="startOverlay">
     <div class="start-gate" id="startGate" role="button" tabindex="0" aria-label="화면을 클릭해서 시작">
@@ -2592,6 +2649,7 @@
     const gradeBackButton = document.getElementById("gradeBackButton");
     const gradeButtons = [...document.querySelectorAll(".grade-button[data-grade]")];
     const gameStageEl = document.getElementById("gameStage");
+    const floatingTextLayerEl = document.getElementById("floatingTextLayer");
     const standardModeButton = document.getElementById("standardModeButton");
     const endlessModeButton = document.getElementById("endlessModeButton");
     const bgmToggleButton = document.getElementById("bgmToggleButton");
@@ -3559,6 +3617,18 @@
       tone(980, .07, "sine", .03 * mult, .02);
     }
 
+    // Extra layers vary with the actual attack result; base SFX and BGM remain unchanged.
+    function playGrowthSfx(damage=0, push=0, critical=false, legendary=false) {
+      const strength=Math.min(6, Math.max(0,(damage-1)*.32+(push-1)*.35));
+      const hybrid=damage>=2 && push>=2;
+      if (strength<.7 && !critical && !legendary) return;
+      tone(Math.max(55,115-strength*8), .14+strength*.025,"triangle",.019+strength*.004,.012);
+      if (strength>=2) noiseBurst(.055+strength*.013,.012+strength*.004,780,.55,.027);
+      if (hybrid) { tone(480+strength*42,.13,"sawtooth",.022+strength*.003,.025); tone(170,.18,"sine",.025,.046); }
+      if (critical) tone(1550+strength*110,.17,"sine",.027,.055);
+      if (legendary) {tone(72,.28,"square",.035,.025);tone(1070,.19,"triangle",.025,.11);}
+    }
+
     function playResistSound() {
       tone(190, .10, "square", .055);
       tone(280, .08, "triangle", .05, .025);
@@ -3621,35 +3691,156 @@
       };
     }
 
-    function showImpact(targetEl, kind = "basic") {
-      const targetRect = localRectInArenaWrap(targetEl);
-      const el = document.createElement("div");
-      el.className = "impact" + (kind === "strong" ? " strong" : "");
-      el.textContent = "💥";
-      const size = kind === "strong" ? 96 : 74;
-      el.style.left = `${targetRect.left + targetRect.width / 2 - size / 2}px`;
-      el.style.top = `${targetRect.top + targetRect.height / 2 - size / 2 - 4}px`;
-      arenaWrapEl.appendChild(el);
-      setTimeout(() => el.remove(), 380);
+    // Shared, bounded particle renderer: each +1 stat gradually scales existing effects.
+    function showGrowthBurst(targetEl, damage=0, push=0, critical=false, legendary=false, healing=false) {
+      const rect=localRectInArenaWrap(targetEl);
+      const x=rect.left+rect.width/2, y=rect.top+rect.height/2-4;
+      const attackScale=Math.min(3,1+Math.max(0,damage-1)*.105);
+      const pushScale=Math.min(3,1+Math.max(0,push-1)*.17);
+      const hybrid=damage>=2 && push>=2;
+      const baseColor=healing?"#4ade80":legendary?"#fde047":critical?"#facc15":hybrid?"#c084fc":damage>0?"#fb923c":"#22d3ee";
+      const colors=healing?["#4ade80","#bbf7d0","#86efac"]:legendary?["#fde047","#fff7ad","#fb923c"]:critical?["#fde047","#fb923c","#fff"]:
+        hybrid?["#fb923c","#22d3ee","#c084fc"]:damage>0?["#fb923c","#f97316","#fde68a"]:["#22d3ee","#67e8f9","#60a5fa"];
+      const ring=(size,color,delay=0)=>{
+        const el=document.createElement("div");el.className="fx-ring";
+        el.style.left=x+"px";el.style.top=y+"px";
+        el.style.setProperty("--fx-size",Math.round(size)+"px");el.style.setProperty("--fx-color",color);
+        el.style.setProperty("--fx-border",Math.min(9,3+Math.round(Math.max(attackScale,pushScale)))+"px");
+        el.style.setProperty("--fx-delay",delay+"ms");arenaWrapEl.appendChild(el);
+        setTimeout(()=>el.remove(),740+delay);
+      };
+      if(damage>0) ring(36*attackScale,colors[0]);
+      if(push>0) ring(31*pushScale,healing?"#4ade80":hybrid?"#22d3ee":"#60a5fa",55);
+      if(critical||legendary) ring(45*Math.max(attackScale,pushScale),"#fde047",90);
+      const count=Math.min(40,Math.round(5+damage*1.3+push*1.7+(critical?6:0)+(legendary?5:0)));
+      const reach=Math.min(230,32+damage*5+push*6+(critical?22:0));
+      for(let i=0;i<count;i++){
+        const angle=Math.PI*2*i/count+(Math.random()-.5)*.28;
+        const distance=reach*(.55+Math.random()*.65);
+        const el=document.createElement("div");el.className="fx-shard";
+        el.style.left=x+"px";el.style.top=y+"px";
+        el.style.setProperty("--fx-color",colors[i%colors.length]);
+        el.style.setProperty("--fx-dx",Math.round(Math.cos(angle)*distance)+"px");
+        el.style.setProperty("--fx-dy",Math.round(Math.sin(angle)*distance)+"px");
+        el.style.setProperty("--fx-angle",Math.round(angle*180/Math.PI)+"deg");
+        el.style.setProperty("--fx-width",Math.min(13,4+attackScale*2)+"px");
+        el.style.setProperty("--fx-height",Math.min(21,7+pushScale*3)+"px");
+        arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),730);
+      }
+      if(hybrid||critical||legendary){
+        const el=document.createElement("div");el.className="fx-slash";
+        el.style.left=x+"px";el.style.top=y+"px";
+        el.style.setProperty("--fx-length",Math.round(85*Math.max(attackScale,pushScale))+"px");
+        el.style.setProperty("--fx-thickness",Math.min(15,4+attackScale*2)+"px");
+        el.style.setProperty("--fx-color",baseColor);
+        arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),400);
+      }
+    }
+
+
+    // Final damage >=8: extra electricity over the existing slash, stronger as damage rises.
+    function showElectricSlash(targetEl, damage) {
+      if (damage < 8) return;
+      const r=localRectInArenaWrap(targetEl), size=Math.min(288,150+(damage-8)*13);
+      const el=document.createElement('div');el.className='fx-electric-slash';
+      el.style.left=(r.left+r.width/2)+'px';el.style.top=(r.top+r.height/2-8)+'px';
+      el.style.width=size+'px';el.style.height=Math.round(size*.68)+'px';
+      el.innerHTML=`<svg viewBox="0 0 180 122" aria-hidden="true">
+        <path d="M6 106 L55 72 L69 26 L91 55 L157 7 L119 65 L171 91 L98 80 L65 117" fill="none" stroke="#22d3ee" stroke-width="12" stroke-linejoin="bevel"/>
+        <path d="M6 106 L55 72 L69 26 L91 55 L157 7 L119 65 L171 91 L98 80 L65 117" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="bevel"/>
+        <path d="M38 21 L70 52 L50 63 M136 35 L111 55 L151 67 M85 82 L112 106" fill="none" stroke="#fef08a" stroke-width="5"/>
+      </svg>`;
+      arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),480);
+    }
+
+    // Push 5-6: flame wave; 7-8: dragon head; 9+: larger dragon and flame tail.
+    // Push is the pre-resistance total, so resistance does not hide an earned visual tier.
+    function showFireDragon(sourceEl, targetEl, push, hybrid=false) {
+      if (push < 5) return;
+      const a=localRectInArenaWrap(sourceEl), b=localRectInArenaWrap(targetEl);
+      const tier=push>=9?'titan':push>=7?'dragon':'trace';
+      const size=Math.min(255, tier==='trace'?145:tier==='dragon'?193:222+(push-9)*5);
+      const sx=a.left+a.width*.85, sy=a.top+a.height*.48;
+      const ex=b.left+b.width*.5, ey=b.top+b.height*.46;
+      const el=document.createElement('div');
+      el.className='fx-fire-dragon '+tier+(hybrid?' hybrid':'');
+      el.style.left=sx+'px';el.style.top=sy+'px';
+      el.style.width=size+'px';el.style.height=Math.round(size*110/240)+'px';
+      el.style.setProperty('--fx-fly-x',Math.round(Math.max(36,ex-sx-size*.37))+'px');
+      el.style.setProperty('--fx-fly-y',Math.round(ey-sy)+'px');
+      el.innerHTML=`<svg viewBox="0 0 240 110" aria-hidden="true">
+        <path d="M0 52 L49 9 L33 43 L84 12 L64 49 L109 30 L99 68 L56 102 L65 74 L15 94 L30 60Z" fill="#ea580c" opacity=".87"/>
+        <path d="M9 56 L65 24 L49 52 L112 41 L119 67 L62 87 L78 64 L27 77Z" fill="#fbbf24"/>
+        <path d="M19 58 L79 43 L130 48 L117 65 L67 70Z" fill="#fff7b2" opacity=".9"/>
+        <g class="fx-dragon-head">
+          <path d="M99 42 L110 14 L132 29 L155 23 L177 4 L183 33 L207 39 L238 52 L213 70 L187 66 L163 90 L145 72 L110 75 L101 56Z" fill="#c2410c" stroke="#fff1a3" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M111 43 L139 34 L176 31 L190 43 L220 49 L228 55 L197 57 L183 67 L160 78 L146 63 L115 65Z" fill="#ff9b23"/>
+          <path d="M122 50 L166 43 L202 51 L218 55 L186 58 L167 67 L141 58Z" fill="#fff1a3"/>
+          <path d="M168 60 L196 63 L214 59 L197 75 L179 72Z" fill="#7c2d12"/>
+          <path d="M186 64 L190 73 L194 64 M200 64 L202 70 L206 62" fill="#fff7ed" stroke="#fff7ed" stroke-width="2"/>
+          <path d="M151 41 L169 39 L165 49 L154 49Z" fill="#431407"/>
+          <circle cx="164" cy="44" r="2.8" fill="#fef08a"/>
+          <path d="M132 29 L135 6 L147 24 M176 29 L194 14 L188 37" fill="#ffef9c" stroke="#ef7b13" stroke-width="2"/>
+        </g>
+      </svg>`;
+      arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),570);
+    }
+
+    function playMilestoneSfx(damage, push) {
+      if(damage>=8){noiseBurst(.085,Math.min(.042,.023+damage*.0006),2600,.75);tone(1260,.13,'sawtooth',.026,.018);}
+      if(push>=5){noiseBurst(.18,Math.min(.052,.025+push*.002),490,.55,.04);tone(Math.max(77,185-push*9),.20,'triangle',.034,.035);}
+      if(damage>=8&&push>=5) tone(84,.24,'sine',.031,.055);
+    }
+
+    function showImpact(targetEl, kind="basic", fx={}) {
+      const rect=localRectInArenaWrap(targetEl);
+      const damage=fx.damage??(kind==="strong"?3:1);
+      const push=fx.push??0;
+      const size=Math.min(210,60+Math.max(0,damage-1)*7);
+      const el=document.createElement("div");el.className="impact"+(kind==="strong"?" strong":"");
+      el.textContent="💥";el.style.width=size+"px";el.style.height=size+"px";
+      el.style.fontSize=Math.min(135,42+Math.max(0,damage-1)*5)+"px";
+      el.style.left=(rect.left+rect.width/2-size/2)+"px";
+      el.style.top=(rect.top+rect.height/2-size/2-4)+"px";
+      arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),380);
+      showGrowthBurst(targetEl,damage,push,!!fx.critical,!!fx.legendary);
     }
 
     const floatingTextStacks = new WeakMap();
+
+    // Convert transformed fighter coordinates into game-stage coordinates.
+    // On mobile the battle is additionally scaled; the text layer is not.
+    function stageTextMetrics(targetEl) {
+      const stage = gameStageEl.getBoundingClientRect();
+      const fighter = targetEl.getBoundingClientRect();
+      const battle = arenaWrapEl.getBoundingClientRect();
+      const stageScaleX = stage.width / (gameStageEl.offsetWidth || stage.width) || 1;
+      const stageScaleY = stage.height / (gameStageEl.offsetHeight || stage.height) || 1;
+      const textScale = Math.min(1, Math.max(.2,
+        (battle.width / (arenaWrapEl.offsetWidth || battle.width)) / stageScaleX));
+      return {
+        x:(fighter.left + fighter.width/2 - stage.left)/stageScaleX,
+        y:(fighter.top - stage.top)/stageScaleY,
+        scale:textScale
+      };
+    }
 
     function layoutFloatingTextStack(targetEl) {
       const stack=(floatingTextStacks.get(targetEl)||[]).filter(el=>el.isConnected);
       floatingTextStacks.set(targetEl,stack);
       if (!stack.length) return;
-      const targetRect=localRectInArenaWrap(targetEl);
-      const baseLeft=targetRect.left+targetRect.width/2;
-      const baseTop=targetRect.top-10;
-      const gap=38;
-      // Newest effect stays closest to the fighter; older effects move upward.
+      const {x,y,scale}=stageTextMetrics(targetEl);
+      const baseTop=y-10*scale;
+      // Older texts stack upwards, beyond the arena, without getting clipped.
       [...stack].reverse().forEach((el,index)=>{
         const row=Math.min(index,5);
         const overflow=index>5 ? index-5 : 0;
         const side=overflow ? (overflow%2 ? -1 : 1) : 0;
-        el.style.left=`${baseLeft + side*150}px`;
-        el.style.top=`${Math.max(8,baseTop-row*gap)}px`;
+        const width=el.offsetWidth;
+        const margin=8*scale;
+        const center=Math.max(width/2+margin,Math.min(gameStageEl.clientWidth-width/2-margin,x+side*150*scale));
+        el.style.left=`${center}px`;
+        el.style.top=`${Math.max(60*scale,baseTop-row*38*scale)}px`;
       });
     }
 
@@ -3657,7 +3848,13 @@
       const el = document.createElement("div");
       el.className = "floating-number" + (type === "strong" ? " strong" : type === "push" ? " push-text" : type === "crit" ? " crit-text" : type === "resist" ? " resist-text" : type === "special" ? " special-text" : type === "legend" ? " legend-text" : "");
       el.textContent = text;
-      arenaWrapEl.appendChild(el);
+      const {scale}=stageTextMetrics(targetEl);
+      const fontSizes={strong:38,push:23,crit:24,resist:23,legend:28};
+      const minWidths={push:110,crit:124,resist:130};
+      el.style.fontSize=`${Math.max(10,(fontSizes[type]||31)*scale)}px`;
+      el.style.minWidth=`${(minWidths[type]||64)*scale}px`;
+      el.style.setProperty("--float-scale",scale);
+      floatingTextLayerEl.appendChild(el);
       const stack=(floatingTextStacks.get(targetEl)||[]).filter(item=>item.isConnected);
       stack.push(el);
       floatingTextStacks.set(targetEl,stack);
@@ -3669,14 +3866,16 @@
       }, lifetime);
     }
 
-    function showPushWave(targetEl) {
-      const targetRect = localRectInArenaWrap(targetEl);
-      const el = document.createElement("div");
-      el.className = "push-wave";
-      el.style.left = `${targetRect.left + targetRect.width / 2 - 42}px`;
-      el.style.top = `${targetRect.top + targetRect.height / 2 - 42}px`;
-      arenaWrapEl.appendChild(el);
-      setTimeout(() => el.remove(), 520);
+    function showPushWave(targetEl, strength=1, hybrid=false) {
+      const targetRect=localRectInArenaWrap(targetEl);
+      const size=Math.min(230,84+Math.max(0,strength-1)*17);
+      const el=document.createElement("div");
+      el.className="push-wave"+(hybrid?" fx-combined":"");
+      el.style.width=size+"px";el.style.height=size+"px";
+      el.style.borderWidth=Math.min(10,4+Math.ceil(strength/2))+"px";
+      el.style.left=(targetRect.left+targetRect.width/2-size/2)+"px";
+      el.style.top=(targetRect.top+targetRect.height/2-size/2)+"px";
+      arenaWrapEl.appendChild(el);setTimeout(()=>el.remove(),520);
     }
 
     function shakeArena() {
@@ -3741,6 +3940,7 @@
       el.style.left = `${playerRect.left + playerRect.width / 2}px`;
       el.style.top = `${playerRect.top - 10}px`;
       arenaWrapEl.appendChild(el);
+      if(amount>0) showGrowthBurst(playerEl,0,Math.min(7,amount),false,false,true);
       setTimeout(() => el.remove(), 960);
     }
 
@@ -3893,7 +4093,12 @@
 
       if (damage > 1 || critTriggered) playStrongHitSound(); else playHitSound();
       if (critTriggered) setTimeout(playCriticalSound, 28);
-      showImpact(enemyEl, damage > 1 ? "strong" : "basic");
+      const visualPush=damage>=state.enemyHp?0:pushDistance;
+      playGrowthSfx(damage,visualPush,critTriggered,hasTrait("L01"));
+      playMilestoneSfx(damage,rawPushDistance);
+      showImpact(enemyEl,damage>1?"strong":"basic",{damage,push:visualPush,critical:critTriggered,legendary:hasTrait("L01")});
+      showElectricSlash(enemyEl,damage);
+      showFireDragon(playerEl,enemyEl,rawPushDistance,damage>=8);
       showFloatingText(enemyEl, `-${damage}`, damage > 1 ? "strong" : "damage");
       if (critTriggered) setTimeout(()=>showFloatingText(enemyEl, `CRITICAL ×${state.critMultiplier.toFixed(1).replace('.0','')}`, "crit"),70);
       if (comboDamage>0) setTimeout(()=>showFloatingText(enemyEl,`3연속 공격 +${comboDamage}`,"crit"),120);
@@ -3909,7 +4114,10 @@
       if (reattack && state.enemyHp>0) {
         await sleep(145);
         playStrongHitSound();
-        showImpact(enemyEl,"strong");
+        playGrowthSfx(damage,0,critTriggered,hasTrait("L01"));
+        showImpact(enemyEl,"strong",{damage,critical:critTriggered,legendary:hasTrait("L01")});
+        showElectricSlash(enemyEl,damage);
+        if(damage>=8) playMilestoneSfx(damage,0);
         showFloatingText(enemyEl,`재공격 -${damage}`,"special");
         state.enemyHp=Math.max(0,state.enemyHp-damage);
         renderHp(enemyHpEl,state.enemyHp,state.enemyMaxHp); pulseHp(enemyHpEl);
@@ -3924,7 +4132,7 @@
       }
 
       if (bonusPush > 0) {
-        await sleep(85); playPushSound(Math.max(1, bonusPush)); showPushWave(enemyEl);
+        await sleep(85); if(pushDistance>0){playPushSound(pushDistance);showPushWave(enemyEl,pushDistance,damage>=2);}
         const parts=[];
         if (comboPush) parts.push(`3연속 +${comboPush}`);
         if (shockPush) parts.push("충격파 +1");
@@ -3935,7 +4143,7 @@
       }
 
       const totalResist=blockedPush;
-      if (pushDistance > 0 && bonusPush <= 0) setTimeout(() => playPushSound(pushDistance), 30);
+      if (pushDistance > 0 && bonusPush <= 0) setTimeout(() => {playPushSound(pushDistance);showPushWave(enemyEl,pushDistance,damage>=2);}, 30);
       if (penetration && (state.enemyPushResistFlat>0 || state.enemyPushResistChance>0)) {
         await sleep(55); showFloatingText(enemyEl,"🌀 밀기 저항 관통!","push");
       } else if (totalResist>0) {
@@ -3983,10 +4191,11 @@
       enemyEl.classList.add("attack-left");
       await sleep(105);
       if (damage>1) playStrongHitSound(); else if (damage>0) playHitSound();
-      if (damage>0) { showImpact(playerEl,damage>1?"strong":"basic"); showFloatingText(playerEl,`-${damage}`,damage>1?"strong":"damage"); }
+      if(damage>0) playGrowthSfx(damage,pushDistance);
+      if (damage>0) { showImpact(playerEl,damage>1?"strong":"basic",{damage,push:pushDistance}); showFloatingText(playerEl,`-${damage}`,damage>1?"strong":"damage"); }
       if (hpBlocked) showFloatingText(playerEl,"🛡 피해 방어!","special");
       if (pushBlocked) setTimeout(()=>showFloatingText(playerEl,"⚓ 밀기 방어!","special"),70);
-      if (pushDistance>1) setTimeout(()=>{playPushSound(pushDistance);showPushWave(playerEl);showFloatingText(playerEl,`적 밀기 ${pushDistance}칸`,`push`);},70);
+      if (pushDistance>1) setTimeout(()=>{playPushSound(pushDistance);showPushWave(playerEl,pushDistance,damage>=2);showFloatingText(playerEl,`적 밀기 ${pushDistance}칸`,`push`);},70);
       if (damage>0 || pushDistance>0) { shakeArena(); hitFighter(playerEl); }
 
       state.playerHp=Math.max(0,state.playerHp-damage);
