@@ -1951,6 +1951,87 @@
       .arena-wrap:has(.enemy-final-boss) .arena-camera { top: max(104px, calc(50% - 6px)); }
     }
 
+
+    /* v50: fit the visible WebView, including short KakaoTalk landscape windows. */
+    .fullscreen-toggle { display: none; }
+    .fullscreen-note { display: none; position: fixed; z-index: 1500; left: 16px; right: 16px; bottom: 12px; padding: 12px; border-radius: 10px; background: #17253e; border: 1px solid #64748b; font-size: 14px; text-align: center; }
+    .fullscreen-note.show { display: block; }
+    @media (max-width: 1100px), (pointer: coarse) {
+      .game-stage { height: var(--mobile-view-height, 100dvh); }
+      .fullscreen-toggle {
+        display: block; position: absolute; z-index: 120;
+        top: calc(6px + var(--safe-top)); right: calc(8px + var(--safe-right));
+        min-height: 36px; width: 88px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.24);
+        border-radius: 10px; color: #f8fafc; background: #17253e; font: inherit; font-weight: 850; font-size: 13px; cursor: pointer;
+        touch-action: manipulation;
+      }
+      .game-stage:not(.mobile-compact) .topbar > .fighter-status.enemy { padding-top: 52px; }
+      .game-stage.awaiting-start .fullscreen-toggle { display: none; }
+      .game-stage:has(.reward-overlay.show, .result-overlay.show) .fullscreen-toggle { display: none; }
+      .quiz { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+      .question { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+      .choices { flex: 0 0 auto; }
+    }
+    .game-stage.mobile-compact .game {
+      --battle-share: .36;
+      grid-template-columns: minmax(180px, .36fr) minmax(0, .64fr);
+      grid-template-rows: 36px minmax(58px, .4fr) 14px minmax(66px, .6fr) 16px;
+      gap: 4px 8px; overflow: hidden;
+    }
+    .game-stage.mobile-compact .topbar {
+      position: relative; inset: auto; grid-column: 1; grid-row: 2;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 6px; min-height: 0;
+    }
+    .game-stage.mobile-compact .topbar > .fighter-status,
+    .game-stage.mobile-compact .topbar > .fighter-status.enemy {
+      position: relative; inset: auto; grid-row: 1; width: auto; min-width: 0; padding: 5px;
+      min-height: 0; height: 100%; max-height: 100%; overflow-y: auto;
+    }
+    .game-stage.mobile-compact .topbar > .fighter-status:not(.enemy) { grid-column: 1; padding-bottom: 5px; }
+    .game-stage.mobile-compact .topbar > .fighter-status.enemy { grid-column: 2; }
+    .game-stage.mobile-compact .name { font-size: 10px; line-height: 12px; margin-bottom: 2px; }
+    .game-stage.mobile-compact .heart { font-size: 12px; }
+    .game-stage.mobile-compact .hp-row { min-height: 12px; gap: 1px; }
+    .game-stage.mobile-compact .stat-grid { margin-top: 2px; gap: 3px; flex-direction: row; }
+    .game-stage.mobile-compact .stat-pill { min-height: 24px; font-size: 11px; padding: 3px 4px; }
+    .game-stage.mobile-compact .stat-pill.core { width: calc(50% - 1.5px); min-height: 20px; padding: 2px 3px; font-size: 0; }
+    .game-stage.mobile-compact .stat-pill.core::before { font-size: 12px; line-height: 1; }
+    .game-stage.mobile-compact .stat-pill.core:first-child::before { content: "⚔"; }
+    .game-stage.mobile-compact .stat-pill.core:nth-child(2)::before { content: "➜"; }
+    .game-stage.mobile-compact .stat-pill.core b { font-size: 12px; }
+    .game-stage.mobile-compact .trait-heading { font-size: 11px; margin-top: 5px; padding: 5px 0; }
+    .game-stage.mobile-compact .trait-row { min-height: 28px; font-size: 11px; }
+    .game-stage.mobile-compact .trait-empty { font-size: 11px; }
+    .game-stage.mobile-compact .stage-center {
+      position: absolute; left: 0; right: 0; top: -40px; height: 36px; padding: 0;
+    }
+    .game-stage.mobile-compact .round-info { font-size: 15px; line-height: 1.1; }
+    .game-stage.mobile-compact .minimap-row { grid-column: 1; grid-row: 3; height: 14px; }
+    .game-stage.mobile-compact .minimap-track { height: 14px; }
+    .game-stage.mobile-compact .arena-wrap { grid-column: 1; grid-row: 4; min-height: 0; }
+    .game-stage.mobile-compact .arena-wrap .arena-camera,
+    .game-stage.mobile-compact .arena-wrap:has(.enemy-final-boss) .arena-camera { top: calc(100% - 28px); }
+    .game-stage.mobile-compact .tile { height: 28px; border-radius: 6px; }
+    .game-stage.mobile-compact .fighter.pixel-fighter,
+    .game-stage.mobile-compact .fighter.enemy.pixel-fighter { bottom: 20px; }
+    .game-stage.mobile-compact .pixel-art { width: var(--compact-sprite, 32px); height: var(--compact-sprite, 32px); }
+    .game-stage.mobile-compact .fighter.enemy-boss .pixel-art { width: calc(var(--compact-sprite, 32px) * 1.5); height: calc(var(--compact-sprite, 32px) * 1.5); }
+    .game-stage.mobile-compact .fighter.enemy-final-boss .pixel-art { width: calc(var(--compact-sprite, 32px) * 2); height: calc(var(--compact-sprite, 32px) * 2); }
+    .game-stage.mobile-compact .lava { height: 16px; }
+    .game-stage.mobile-compact .stage-map-intro { font-size: 10px; top: 3px; padding: 3px 5px; }
+    .game-stage.mobile-compact .answer-flash { font-size: 14px; padding: 3px 6px; }
+    .game-stage.mobile-compact .message { grid-column: 1; grid-row: 5; font-size: 11px; overflow: hidden; }
+    .game-stage.mobile-compact .quiz { grid-column: 2; grid-row: 2 / 6; padding: 8px; }
+    .game-stage.mobile-compact .question { font-size: 22px; line-height: 1.25; margin: 0 0 8px; }
+    .game-stage.mobile-compact .choices { gap: 6px; }
+    .game-stage.mobile-compact button.choice { min-height: 44px; padding: 5px 6px; font-size: 18px; line-height: 1.2; }
+    .game-stage.mobile-compact .bgm-toggle {
+      top: calc(6px + var(--safe-top)); bottom: auto; left: auto;
+      right: calc(104px + var(--safe-right)); height: 36px; width: 86px; font-size: 12px; border-radius: 10px;
+    }
+    .game-stage.mobile-short .choices { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .game-stage.mobile-short button.choice { font-size: 16px; padding: 5px 4px; }
+
 </style>
 </head>
 <body>
@@ -1961,6 +2042,8 @@
   </div>
   <div class="game-stage awaiting-start" id="gameStage">
   <button class="bgm-toggle" id="bgmToggleButton" type="button" aria-pressed="true">♫ BGM ON</button>
+  <button class="fullscreen-toggle" id="fullscreenToggleButton" type="button" aria-pressed="false">전체화면</button>
+  <div class="fullscreen-note" id="fullscreenNote" role="status" aria-live="polite"></div>
   <main class="game">
     <section class="topbar">
       <div class="fighter-status">
@@ -4471,9 +4554,139 @@
       snapshotStageStart();
     }
 
+
+    // Rendering-only helpers. Battle, question selection and rewards remain unchanged.
+    let mobileQuizFitFrame = 0;
+    let fullscreenNoteTimer = 0;
+    const mobileLayoutQuery = window.matchMedia("(max-width: 1100px), (pointer: coarse)");
+    const fullscreenToggleButton = document.getElementById("fullscreenToggleButton");
+    const fullscreenNote = document.getElementById("fullscreenNote");
+
+    function fitMobileQuiz() {
+      mobileQuizFitFrame = 0;
+      const canvas = document.getElementById("gameStage");
+      const quiz = document.querySelector(".quiz");
+      const question = document.getElementById("question");
+      const choices = document.getElementById("choices");
+      const buttons = [...choices.querySelectorAll(".choice")];
+      if (!mobileLayoutQuery.matches) {
+        question.style.removeProperty("font-size");
+        buttons.forEach(button => button.style.removeProperty("font-size"));
+        return;
+      }
+      const compact = canvas.classList.contains("mobile-compact");
+      const short = canvas.classList.contains("mobile-short");
+      // The question owns all space left above the fixed touch targets. No quiz scrolling.
+      let qSize = compact ? 22 : Math.min(26, Math.max(20, innerWidth * .03));
+      let cSize = short ? 16 : compact ? 18 : Math.min(21, Math.max(17, innerWidth * .025));
+      question.style.fontSize = qSize + "px";
+      buttons.forEach(button => button.style.fontSize = cSize + "px");
+      function textFits() {
+        const range = document.createRange();
+        range.selectNodeContents(question);
+        const textRect = range.getBoundingClientRect();
+        const questionRect = question.getBoundingClientRect();
+        return textRect.height <= question.clientHeight + 1 && textRect.width <= question.clientWidth + 1
+          && textRect.top >= questionRect.top - 1 && textRect.bottom <= questionRect.bottom + 1
+          && quiz.scrollHeight <= quiz.clientHeight + 1;
+      }
+      // Size only the displayed text; don't remove, truncate or rewrite any question.
+      while (!textFits() && qSize > 14) {
+        qSize -= .5;
+        question.style.fontSize = qSize + "px";
+      }
+      while (!textFits() && cSize > 12) {
+        cSize -= .5;
+        buttons.forEach(button => button.style.fontSize = cSize + "px");
+      }
+      // A final small adjustment covers unusually long questions in very short WebViews.
+      while (!textFits() && qSize > 12) {
+        qSize -= .5;
+        question.style.fontSize = qSize + "px";
+      }
+      if (compact) {
+        const arena = document.getElementById("arenaWrap");
+        canvas.style.setProperty("--compact-sprite", Math.max(24, Math.min(56, (arena.clientHeight - 18) / 2)) + "px");
+      }
+    }
+
+    function scheduleMobileQuizFit() {
+      if (!mobileQuizFitFrame) mobileQuizFitFrame = requestAnimationFrame(fitMobileQuiz);
+    }
+
+    function syncMobileViewport() {
+      const canvas = document.getElementById("gameStage");
+      if (!mobileLayoutQuery.matches) {
+        canvas.classList.remove("mobile-compact", "mobile-short");
+        canvas.style.removeProperty("--mobile-view-height");
+        scheduleMobileQuizFit();
+        return;
+      }
+      const vv = window.visualViewport;
+      const height = Math.floor(Math.min(innerHeight, vv && Math.abs(vv.scale - 1) < .05 ? vv.height : innerHeight));
+      const landscape = innerWidth > height;
+      canvas.style.setProperty("--mobile-view-height", height + "px");
+      canvas.classList.toggle("mobile-compact", landscape && height <= 500);
+      canvas.classList.toggle("mobile-short", landscape && height < 270);
+      scheduleMobileQuizFit();
+    }
+
+    function isGameFullscreen() {
+      return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function showFullscreenNote() {
+      fullscreenNote.textContent = "이 브라우저는 전체화면을 지원하지 않습니다. 카카오톡 메뉴에서 외부 브라우저(Chrome/Safari)로 열어주세요.";
+      fullscreenNote.classList.add("show");
+      clearTimeout(fullscreenNoteTimer);
+      fullscreenNoteTimer = setTimeout(() => fullscreenNote.classList.remove("show"), 4500);
+    }
+
+    async function requestGameFullscreen(showFailure = false) {
+      if (!mobileLayoutQuery.matches || isGameFullscreen()) return;
+      const root = document.documentElement;
+      try {
+        if (root.requestFullscreen) await root.requestFullscreen({ navigationUI: "hide" });
+        else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+        else { if (showFailure) showFullscreenNote(); return; }
+      } catch (_) { if (showFailure) showFullscreenNote(); }
+      syncMobileViewport();
+    }
+
+    fullscreenToggleButton.addEventListener("click", async () => {
+      if (isGameFullscreen()) {
+        try {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        } catch (_) {}
+      } else await requestGameFullscreen(true);
+    });
+    function updateFullscreenLayout() {
+      fullscreenToggleButton.textContent = isGameFullscreen() ? "화면 복귀" : "전체화면";
+      fullscreenToggleButton.setAttribute("aria-pressed", String(isGameFullscreen()));
+      fullscreenNote.classList.remove("show");
+      fitGameCanvas();
+      requestAnimationFrame(() => {
+        renderPositions();
+        if (state.cameraMode === "overview") setOverviewCamera(false);
+        else followBattleCamera(false);
+        scheduleMobileQuizFit();
+      });
+    }
+    document.addEventListener("fullscreenchange", updateFullscreenLayout);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenLayout);
+    window.visualViewport?.addEventListener("resize", updateFullscreenLayout);
+    mobileLayoutQuery.addEventListener("change", updateFullscreenLayout);
+    new MutationObserver(scheduleMobileQuizFit).observe(document.querySelector(".quiz"), { childList: true, subtree: true, characterData: true });
+    if (window.ResizeObserver) new ResizeObserver(scheduleMobileQuizFit).observe(document.querySelector(".quiz"));
+    document.fonts?.addEventListener("loadingdone", scheduleMobileQuizFit);
+    startGate.addEventListener("click", () => { void requestGameFullscreen(false); });
+    startGate.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") void requestGameFullscreen(false); });
+
     function fitGameCanvas() {
       const canvas = document.getElementById("gameStage");
       if (!canvas) return;
+      syncMobileViewport();
       // Only layout changes on small/touch screens; gameplay keeps the original rules.
       if (window.matchMedia("(max-width: 1100px), (pointer: coarse)").matches) {
         canvas.style.transform = "none";
